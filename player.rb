@@ -5,7 +5,13 @@ class Player < ClooneysResource
   def collection_path(options = nil)
     raise "no game" unless @game
     raise "no game id" unless @game.id
-    "/games/#{@game.id}/#{self.class.collection_name}.xml"
+    "/games/#{@game.id}/#{self.class.collection_name}.json"
+  end
+
+  def element_path(options = nil)
+    raise "no game" unless @game
+    raise "no game id" unless @game.id
+    "/games/#{@game.id}/#{self.class.collection_name}/#{self.id}.json"
    end
 
 end
