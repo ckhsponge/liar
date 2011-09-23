@@ -1,5 +1,15 @@
 #!/usr/bin/ruby
 
+class Fixnum
+  def factorial
+    self.downto(1).inject(:*)
+  end
+
+  def choose( k )
+    self.factorial / ( k.factorial * (self - k).factorial )
+  end
+end
+
 require 'user'
 require 'game'
 class Console
