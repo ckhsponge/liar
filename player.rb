@@ -12,6 +12,6 @@ class Player < ClooneysResource
     raise "no game" unless @game
     raise "no game id" unless @game.id
     "/games/#{@game.id}/#{self.class.collection_name}/#{self.id}.json"
-   end
+  end
 
 end
