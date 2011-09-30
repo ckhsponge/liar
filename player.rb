@@ -14,4 +14,8 @@ class Player < ClooneysResource
     "/games/#{@game.id}/#{self.class.collection_name}/#{self.id}.json"
   end
 
+  def to_s
+    self.login
+  end
+
 end

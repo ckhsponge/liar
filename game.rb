@@ -32,11 +32,29 @@ class Game < ClooneysResource
     player.destroy
   end
 
+  def print_status( user )
+    puts self.name
+    puts "Player - Dice Left"
+    self.players.each do |player|
+      puts "  #{player.login} - #{player.dice_left}"
+    end
+    if self.round_number
+      puts "Total dice left: #{self.dice_count}"
+      if self.winner_id
+        puts "Winner: #{player_for_user(self.winner_id)}"
+      else
+        known_dice = self.dice_for_user(user)
+        puts "My dice: #{known_dice.join(",")}"
+        puts "Bid: #{self.bid}"
+        puts "Waiting for #{player_for_user(self.next_bidder_id)}"
+      end
+    else
+      puts "Waiting for game to start"
+    end
+  end
+
   def print_odds( user )
-    puts "Die count: #{self.dice_count}"
     known_dice = self.dice_for_user(user)
-    puts "My dice: #{known_dice.join(",")}"
-    puts "Bid: #{self.bid}"
     puts "Total for #{self.bid}: #{odds(self.bid, known_dice)}"
   end
 
@@ -97,6 +115,7 @@ class Game < ClooneysResource
   end
 
   def dice_for_user( user )
+    return [] unless self.round_number
     rolls = Roll.find_rolls( self, self.round_number )
     rolls.each do |roll|
      return roll.dice if roll.user_id == user.id
@@ -106,8 +125,10 @@ class Game < ClooneysResource
 
   def player_for_user ( user )
     return nil unless user
+    user_id = user.kind_of?(Fixnum) ? user : user.id
+    return nil unless user
     self.players.each do |p|
-      return p if p.user_id == user.id
+      return p if p.user_id == user_id
     end
     return nil
   end

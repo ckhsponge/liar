@@ -17,9 +17,15 @@ class Console
   def start
     sign_in
     list_games
-@game = game_for_id 17
-odds
+    @games.reverse.each do |game|
+      game.players.each {|p| @game = game if p.user_id == @user.id}
+    end
     while true
+      if @game
+        puts "--- PLAYING ---"
+        @game.print_status( @user )
+        puts "---------------"
+      end
       putc '>'
       putc ' '
       command = gets.chomp
@@ -31,7 +37,6 @@ odds
           list_active_games
         when "create_game"
           create_game_command
-          list_games
         when "destroy_game"
           destroy_game_command
           list_games
@@ -39,22 +44,18 @@ odds
           start_game_command
         when "join_game"
           join_game_command
-          list_games
         when "play_game"
           play_game_command
-          odds
         when "r"
-          list_games
-          @command_ints = [@game.id]
-          find_game {}
-          odds
+          ensure_game { @game.reload }
+        when "odds"
+          ensure_game { odds }
         when "bid"
-          bid_command( @game, @command_ints[0], @command_ints[1])
-        when "bid_bullshit"
-          @game.make_bid_bullshit( @user )
+          ensure_game { bid_command( @game, @command_ints[0], @command_ints[1]); @game.reload }
+        when "bullshit"
+          ensure_game { @game.make_bid_bullshit( @user ); @game.reload }
         when "unjoin"
-          game_for_id(@command_ints[0]).unjoin( @user )
-          list_games
+          ensure_game { @game.unjoin( @user ); list_games }
       end
     end
   end
@@ -88,7 +89,7 @@ odds
   end
 
   def destroy_game_command
-    find_game do
+    ensure_game do
       @game.destroy
       puts "Destroyed game"
       @game = nil
@@ -96,10 +97,11 @@ odds
   end
 
   def start_game_command
-    find_game do
+    ensure_game do
       @game.start = true
       if @game.save
         puts "Game started"
+        @game.reload
       else
         puts @game.errors.inspect
       end
@@ -113,6 +115,7 @@ odds
         puts "Could not join game: #{player.errors.inspect}"
       else
         puts "Joined game"
+        @game.reload
       end
     end
   end
@@ -155,11 +158,19 @@ odds
     puts "Signed in #{@user.login}"
   end
 
+  def ensure_game
+    if @game
+      yield
+    else
+      puts "No game is being played"
+    end
+  end
+
   def find_game
     if @command_ints.size < 1
       puts "Please enter a game id"
     else
-      @game = game_for_id( @command_ints[0] )
+      @game = Game.find( @command_ints[0] )
       if !@game
         "No game with id #{@command_ints[0]} found"
       else
