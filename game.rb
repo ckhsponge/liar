@@ -34,12 +34,62 @@ class Game < ClooneysResource
 
   def print_odds( user )
     puts "Die count: #{self.dice_count}"
-    puts "My dice: #{self.dice_for_user(user).join(",")}"
-    puts "Bid: #{self.bid} #{odds(self.bid)}"
+    known_dice = self.dice_for_user(user)
+    puts "My dice: #{known_dice.join(",")}"
+    puts "Bid: #{self.bid}"
+    puts "Total for #{self.bid}: #{odds(self.bid, known_dice)}"
   end
 
-  def odds( bid )
-    
+  def make_bid( user, count, die)
+    raise "no user" unless user
+    raise "no count" unless count
+    raise "no die" unless die
+    bid = Bid.new( :game_id => self.id, :count => count, :die => die)
+    bid.game = self
+    bid.save!
+  end
+
+  def make_bid_bullshit( user )
+    raise "no user" unless user
+    bid = Bid.new( :game_id => self.id, :bullshit => true)
+    bid.game = self
+    bid.save!
+  end
+
+  def odds( bid, known_dice = [] )
+    return 0.0 unless bid
+    puts "Calculating odds for #{bid.die}"
+    known_match_count = known_dice.reject{ |d| !die_match?(d, bid.die)}.size
+    return 1.0 if known_match_count >= bid.count
+    sum = 0.0
+    for count in (bid.count)..(self.dice_count)
+      odds = odds_exact(count, bid.die, known_dice)
+      puts "#{count} #{odds}"
+      sum += odds
+    end
+    return sum
+  end
+
+  def odds_exact( count, die, known_dice = [] )
+    dice_count = self.dice_count
+    return 0.0 if count > dice_count
+    known_match_count = known_dice.reject{ |d| !die_match?(d, die)}.size
+    return 1.0 if known_match_count >= count
+    unknown_count = dice_count - known_dice.size
+    #find probability that there are count - known_match_count in the unknown dice
+    required_count = count - known_match_count
+    return 0.0 if required_count > unknown_count
+    puts "dice unkn req #{dice_count} #{unknown_count} #{required_count}"
+    return (( odds_of_match )**( required_count )) * (( 1.0 - odds_of_match )**( unknown_count - required_count )) * ( unknown_count.choose(required_count) )
+  end
+
+  def die_match?( cup_die, die )
+    return true if cup_die == 1 && self.aces_wild
+    return cup_die == die
+  end
+
+  def odds_of_match
+    self.aces_wild ? (1.0/3.0) : (1.0/6.0)
   end
 
   def dice_count

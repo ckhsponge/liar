@@ -2,6 +2,7 @@
 
 class Fixnum
   def factorial
+    return 1 if self == 0
     self.downto(1).inject(:*)
   end
 
@@ -16,8 +17,8 @@ class Console
   def start
     sign_in
     list_games
-#@game = game_for_id 17
-#odds
+@game = game_for_id 17
+odds
     while true
       putc '>'
       putc ' '
@@ -42,6 +43,15 @@ class Console
         when "play_game"
           play_game_command
           odds
+        when "r"
+          list_games
+          @command_ints = [@game.id]
+          find_game {}
+          odds
+        when "bid"
+          bid_command( @game, @command_ints[0], @command_ints[1])
+        when "bid_bullshit"
+          @game.make_bid_bullshit( @user )
         when "unjoin"
           game_for_id(@command_ints[0]).unjoin( @user )
           list_games
@@ -111,6 +121,14 @@ class Console
     find_game do
       
     end
+  end
+
+  def bid_command( game, count, die)
+    raise "no game" unless game
+    raise "no user" unless @user
+    raise "no count" unless count
+    raise "no die" unless die
+    game.make_bid( @user, count, die)
   end
 
   def odds
