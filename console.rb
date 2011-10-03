@@ -11,8 +11,7 @@ class Fixnum
   end
 end
 
-require 'user'
-require 'game'
+require 'clooneys'
 class Console
   def start
     sign_in
@@ -21,47 +20,51 @@ class Console
       game.players.each {|p| @game = game if p.user_id == @user.id}
     end
     while true
-      if @game
-        puts "--- PLAYING ---"
-        @game.print_status( @user )
-        puts "---------------"
-      end
-      putc '>'
-      putc ' '
-      command = gets.chomp
-      @command_ints = command.split(" ").collect{|i| i.to_i}[1,100]
-      case command.split(" ").first
-        when "list_games"
-          list_games
-        when "list_active_games"
-          list_active_games
-        when "create_game"
-          create_game_command
-        when "destroy_game"
-          destroy_game_command
-          list_games
-        when "start_game"
-          start_game_command
-        when "join_game"
-          join_game_command
-        when "play_game"
-          play_game_command
-        when "r"
-          ensure_game { @game.reload }
-        when "odds"
-          ensure_game { odds }
-        when "bid"
-          ensure_game { bid_command( @game, @command_ints[0], @command_ints[1]); @game.reload }
-        when "bullshit"
-          ensure_game { @game.make_bid_bullshit( @user ); @game.reload }
-        when "unjoin"
-          ensure_game { @game.unjoin( @user ); list_games }
+      begin
+        if @game
+          puts "--- PLAYING ---"
+          @game.print_status( @user )
+          puts "---------------"
+        end
+        putc '>'
+        putc ' '
+        command = gets.chomp
+        @command_ints = command.split(" ").collect{|i| i.to_i}[1,100]
+        case command.split(" ").first
+          when "list_games"
+            list_games
+          when "list_active_games"
+            list_active_games
+          when "create_game"
+            create_game_command
+          when "destroy_game"
+            destroy_game_command
+            list_games
+          when "start_game"
+            start_game_command
+          when "join_game"
+            join_game_command
+          when "play_game"
+            play_game_command
+          when "r"
+            ensure_game { @game.reload }
+          when "odds"
+            ensure_game { odds }
+          when "bid"
+            ensure_game { bid_command( @game, @command_ints[0], @command_ints[1]); @game.reload }
+          when "bullshit"
+            ensure_game { @game.make_bid_bullshit( @user ); @game.reload }
+          when "unjoin"
+            ensure_game { @game.unjoin( @user ); list_games }
+        end
+      rescue Clooneys::Exception => exc
+        puts "CLOONEYS EXCEPTION: #{exc.to_s}"
       end
     end
   end
 
   def list_games
-    @games = Game.all + Game.all( "present" )
+    @games = Clooneys::Game.all + Clooneys::Game.all( "present" )
     puts "--- Games ---"
     @games.each do |game|
       puts game.to_s
@@ -70,7 +73,7 @@ class Console
   end
 
   def list_active_games
-    @games = Game.all( "present" )
+    @games = Clooneys::Game.all( "present" )
     puts "--- Games ---"
     @games.each do |game|
       puts game.to_s
@@ -79,7 +82,7 @@ class Console
   end
 
   def create_game_command
-    @game = Game.new( :bid_time => 300, :name => "#{@user.login} #{Time.now.strftime "%Y%m%d%H%M"}")
+    @game = Clooneys::Game.new( :bid_time => 300, :name => "#{@user.login} #{Time.now.strftime "%Y%m%d%H%M"}")
     if @game.save
       puts "Created game #{@game.name}"
     else
@@ -146,9 +149,9 @@ class Console
   end
 
   def sign_in
-    unless ( @user = User.me )
+    unless ( @user = Clooneys::User.me )
       puts "user not found"
-      @user = User.new_me
+      @user = Clooneys::User.new_me
       if @user.save
         puts "Created a new user: #{@user.login}"
       else
@@ -170,7 +173,7 @@ class Console
     if @command_ints.size < 1
       puts "Please enter a game id"
     else
-      @game = Game.find( @command_ints[0] )
+      @game = Clooneys::Game.find( @command_ints[0] )
       if !@game
         "No game with id #{@command_ints[0]} found"
       else

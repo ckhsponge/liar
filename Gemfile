@@ -1,6 +1,7 @@
 source 'http://rubygems.org'
 
 gem 'activeresource', '3.1.0'
+gem "clooneys", "0.5",  :path => "clooneys-0.5"
 
 # Bundle edge Rails instead:
 # gem 'rails', :git => 'git://github.com/rails/rails.git'

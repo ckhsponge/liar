@@ -1,9 +1,5 @@
-
-require 'clooneys_resource'
-require 'player'
-require 'roll'
-require 'bid'
-class Game < ClooneysResource
+require 'clooneys/resource'
+class Clooneys::Game < Clooneys::Resource
 
   BID_TIME_OPTIONS_HASH = {15.seconds.to_i => "15 Seconds", 1.minutes.to_i => "1 Minute", 5.minutes.to_i => "5 Minutes", 1.hours.to_i => "1 Hours", 4.hours.to_i => "4 Hours" , 1.days.to_i => "1 Day" }
   BID_TIME_OPTIONS = BID_TIME_OPTIONS_HASH.to_a.collect{ |a| a.reverse }
@@ -46,7 +42,8 @@ class Game < ClooneysResource
         known_dice = self.dice_for_user(user)
         puts "My dice: #{known_dice.join(",")}"
         puts "Bid: #{self.bid}"
-        puts "Waiting for #{player_for_user(self.next_bidder_id)}"
+        waiter = player_for_user(self.next_bidder_id)
+        puts "Waiting for #{ waiter.user_id == user.id ? 'YOU' : waiter}"
       end
     else
       puts "Waiting for game to start"
@@ -62,14 +59,16 @@ class Game < ClooneysResource
     raise "no user" unless user
     raise "no count" unless count
     raise "no die" unless die
-    bid = Bid.new( :game_id => self.id, :count => count, :die => die)
+    bid = Clooneys::Bid.new( :game_id => self.id, :count => count, :die => die)
     bid.game = self
-    bid.save!
+    unless bid.save
+      raise Clooneys::Exception.new( bid.errors.full_messages.join ',')
+    end
   end
 
   def make_bid_bullshit( user )
     raise "no user" unless user
-    bid = Bid.new( :game_id => self.id, :bullshit => true)
+    bid = Clooneys::Bid.new( :game_id => self.id, :bullshit => true)
     bid.game = self
     bid.save!
   end
@@ -116,7 +115,7 @@ class Game < ClooneysResource
 
   def dice_for_user( user )
     return [] unless self.round_number
-    rolls = Roll.find_rolls( self, self.round_number )
+    rolls = Clooneys::Roll.find_rolls( self, self.round_number )
     rolls.each do |roll|
      return roll.dice if roll.user_id == user.id
     end

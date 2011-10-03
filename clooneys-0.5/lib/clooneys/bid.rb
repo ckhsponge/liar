@@ -1,7 +1,7 @@
-require 'clooneys_resource'
-class Player < ClooneysResource
+require 'clooneys/resource'
+class Clooneys::Bid < Clooneys::Resource
   attr_accessor :game
-
+  
   def collection_path(options = nil)
     raise "no game" unless @game
     raise "no game id" unless @game.id
@@ -15,7 +15,6 @@ class Player < ClooneysResource
   end
 
   def to_s
-    self.login
+    "#{self.count} #{self.die}s"
   end
-
 end

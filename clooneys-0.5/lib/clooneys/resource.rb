@@ -1,7 +1,7 @@
 require 'rubygems'
 #require 'activesupport'
 require 'active_resource'
-class ClooneysResource < ActiveResource::Base
+class Clooneys::Resource < ActiveResource::Base
   LOGIN = "liar5"
   EMAIL_ADDRESS = 'liar5@toonsy.net'
   PASSWORD = 'pass5'
