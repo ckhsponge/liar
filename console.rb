@@ -80,6 +80,18 @@ class Console
   end
 
   def auto_play_command
+    @game.bid.game = @game if @game.bid #TODO
+    if @game.bid
+      r = rand
+      bullshit_odds = @game.bid.odds( @user )
+      selected = r <= (1.0 - @game.bid.odds( @user ))**4
+      puts "#{@game.bid} bullshit odds: #{@game.bid.odds( @user )} - #{r} - #{selected}"
+      if selected
+        @game.make_bid_bullshit( @user )
+        @game.reload
+        return
+      end
+    end
     bids = next_bids
     bids.each do |bid|
       puts "#{bid} odds: #{bid.odds( @user )}"
