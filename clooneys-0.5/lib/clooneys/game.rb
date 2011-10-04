@@ -50,9 +50,9 @@ class Clooneys::Game < Clooneys::Resource
     end
   end
 
-  def print_odds( user )
-    known_dice = self.dice_for_user(user)
-    puts "Total for #{self.bid}: #{odds(self.bid, known_dice)}"
+  def print_odds( bid, user )
+    raise "NO BID" unless bid
+    puts "Total for #{bid}: #{odds_for_user(bid, user)}"
   end
 
   def make_bid( user, count, die)
@@ -70,18 +70,25 @@ class Clooneys::Game < Clooneys::Resource
     raise "no user" unless user
     bid = Clooneys::Bid.new( :game_id => self.id, :bullshit => true)
     bid.game = self
-    bid.save!
+    unless bid.save
+      raise Clooneys::Exception.new( bid.errors.full_messages.join ',')
+    end
+  end
+
+  def odds_for_user( bid, user )
+    known_dice = self.dice_for_user(user)
+    return odds(bid, known_dice)
   end
 
   def odds( bid, known_dice = [] )
     return 0.0 unless bid
-    puts "Calculating odds for #{bid.die}"
+    #puts "Calculating odds for #{bid.die}"
     known_match_count = known_dice.reject{ |d| !die_match?(d, bid.die)}.size
     return 1.0 if known_match_count >= bid.count
     sum = 0.0
     for count in (bid.count)..(self.dice_count)
       odds = odds_exact(count, bid.die, known_dice)
-      puts "#{count} #{odds}"
+      #puts "#{count} #{odds}"
       sum += odds
     end
     return sum
@@ -96,7 +103,12 @@ class Clooneys::Game < Clooneys::Resource
     #find probability that there are count - known_match_count in the unknown dice
     required_count = count - known_match_count
     return 0.0 if required_count > unknown_count
-    puts "dice unkn req #{dice_count} #{unknown_count} #{required_count}"
+    #puts "dice unkn req #{dice_count} #{unknown_count} #{required_count}"
+    odds_of_match = if self.bid
+      self.aces_wild ? (1.0/3.0) : (1.0/6.0)
+                    else
+      die != 1 ? (1.0/3.0) : (1.0/6.0)
+                    end
     return (( odds_of_match )**( required_count )) * (( 1.0 - odds_of_match )**( unknown_count - required_count )) * ( unknown_count.choose(required_count) )
   end
 
@@ -105,21 +117,23 @@ class Clooneys::Game < Clooneys::Resource
     return cup_die == die
   end
 
-  def odds_of_match
-    self.aces_wild ? (1.0/3.0) : (1.0/6.0)
-  end
-
   def dice_count
     self.players.inject(0) {|s, p| p.dice_left + s}
   end
 
   def dice_for_user( user )
     return [] unless self.round_number
-    rolls = Clooneys::Roll.find_rolls( self, self.round_number )
+    rolls = rolls_cache( self.round_number )
     rolls.each do |roll|
      return roll.dice if roll.user_id == user.id
     end
     return []
+  end
+
+  def rolls_cache( round_number )
+    @rolls_cache ||= {}
+    @rolls_cache[ round_number.to_s ] ||= Clooneys::Roll.find_rolls( self, round_number )
+    return @rolls_cache[ round_number.to_s ]
   end
 
   def player_for_user ( user )
@@ -134,7 +148,7 @@ class Clooneys::Game < Clooneys::Resource
   
   def format_bid_time
     s = BID_TIME_OPTIONS_HASH[ self.bid_time.to_i ]
-    return s || "#{t.to_i} Seconds"
+    return s || "#{self.bid_time.to_i} Seconds"
   end
 
   def to_s
