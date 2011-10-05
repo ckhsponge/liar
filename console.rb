@@ -50,6 +50,12 @@ class Console
             ensure_game { @game.reload }
           when "a"
             ensure_game { auto_play_command }
+          when "w"
+            ensure_game {
+              intelligence = Clooneys::Intelligence.new( @game, @user )
+              #intelligence.wait_for_update
+              intelligence.start
+            }
           when "odds"
             ensure_game { odds }
           when "bid"
@@ -63,57 +69,6 @@ class Console
         puts "CLOONEYS EXCEPTION: #{exc.to_s}"
       end
     end
-  end
-
-  def next_bids
-    @game.bid.game = @game if @game.bid #TODO
-    bid = @game.bid ? @game.bid.next : Clooneys::Bid.new( :count => 1, :die => 1)
-    return [] unless bid
-    bid.game = @game
-    bids = [bid]
-    1.upto(12) do
-      bid = bids.last.next
-      break unless bid
-      bids << bid
-    end
-    return bids
-  end
-
-  def auto_play_command
-    @game.bid.game = @game if @game.bid #TODO
-    if @game.bid
-      r = rand
-      bullshit_odds = @game.bid.odds( @user )
-      selected = r <= (1.0 - @game.bid.odds( @user ))**4
-      puts "#{@game.bid} bullshit odds: #{@game.bid.odds( @user )} - #{r} - #{selected}"
-      if selected
-        @game.make_bid_bullshit( @user )
-        @game.reload
-        return
-      end
-    end
-    bids = next_bids
-    bids.each do |bid|
-      puts "#{bid} odds: #{bid.odds( @user )}"
-    end
-    puts "Trying"
-    bids.shuffle!
-    selected_bid = nil
-    bids.each do |bid|
-      r = rand
-      selected = r <= (bid.odds( @user )**2)
-      puts "#{bid} odds: #{bid.odds( @user )} - #{r} - #{selected}"
-      if selected
-        selected_bid = bid
-        break
-      end
-    end
-    if selected_bid
-      @game.make_bid( @user, selected_bid.count, selected_bid.die)
-    else
-      @game.make_bid_bullshit( @user )
-    end
-    @game.reload
   end
 
   def list_games
@@ -159,7 +114,7 @@ class Console
         puts "Game started"
         @game.reload
       else
-        puts @game.errors.inspect
+        puts @game.errors.full_messages.join ','
       end
     end
   end
@@ -191,9 +146,9 @@ class Console
   end
 
   def odds
-    @game.bid.game = @game if @game.bid #TODO
     puts "curent: #{@game.bid} odds: #{@game.bid.odds( @user )}" if @game.bid
-    bids = next_bids
+    intelligence = Clooneys::Intelligence.new( @game, @user )
+    bids = intelligence.next_bids
     bids.each do |bid|
       puts "#{bid} odds: #{bid.odds( @user )}"
     end

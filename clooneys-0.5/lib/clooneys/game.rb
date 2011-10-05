@@ -12,8 +12,16 @@ class Clooneys::Game < Clooneys::Resource
     return games
   end
 
+  def can_bid?( user )
+    self.next_bidder_id && user && next_bidder_id == user.id
+  end
+
+  def complete?
+    return !!self.winner_id
+  end
+
   def join(user)
-    player = Player.new
+    player = Clooneys::Player.new
     player.game = self
     puts "joining: #{self.id}"
     if player.save
@@ -153,5 +161,12 @@ class Clooneys::Game < Clooneys::Resource
 
   def to_s
     "#{self.id} - #{self.name} (#{self.format_bid_time}) [#{self.players.collect {|p| p.login}.join(',')}]"
+  end
+
+  #ensures bid.game is set
+  def bid
+    b = attributes[:bid]
+    b.game = self if b
+    b
   end
 end
