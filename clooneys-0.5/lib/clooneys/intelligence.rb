@@ -8,7 +8,7 @@ class Clooneys::Intelligence
   end
 
   def wait_for_update
-    url = @game.long_poll_url
+    #url = @game.long_poll_url
     #url = "/games/#{@game.id}"
     game = Clooneys::Game.find_from_long_poll( :one, "http://localhost:8000", "/games/#{@game.id}?version=#{@game.lock_version + 1}" )
     puts game.attributes.inspect

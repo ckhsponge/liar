@@ -65,6 +65,8 @@ class Console
           when "unjoin"
             ensure_game { @game.unjoin( @user ); list_games }
         end
+      rescue ActiveResource::ResourceInvalid => arri
+        puts "Command failed (#{arri})"
       rescue Clooneys::Exception => exc
         puts "CLOONEYS EXCEPTION: #{exc.to_s}"
       end
@@ -90,11 +92,12 @@ class Console
   end
 
   def create_game_command
-    @game = Clooneys::Game.new( :bid_time => 300, :name => "#{@user.login} #{Time.now.strftime "%Y%m%d%H%M"}")
+    bid_time = @command_ints.size >= 1 ? @command_ints[0] : 300
+    @game = Clooneys::Game.new( :bid_time => bid_time ) #, :name => "#{@user.login} #{Time.now.strftime "%Y%m%d%H%M"}")
     if @game.save
       puts "Created game #{@game.name}"
     else
-      puts @game.errors.inspect
+      puts @game.errors.to_a.join ','
       @game = nil
     end
   end
