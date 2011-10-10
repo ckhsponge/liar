@@ -12,6 +12,7 @@ class Fixnum
 end
 
 require 'clooneys'
+#Clooneys::Resource.long_poll_host = "localhost:8000"
 class Console
   def start
     sign_in

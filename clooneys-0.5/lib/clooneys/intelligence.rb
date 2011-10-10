@@ -10,10 +10,10 @@ class Clooneys::Intelligence
   def wait_for_update
     #url = @game.long_poll_url
     #url = "/games/#{@game.id}"
-    game = Clooneys::Game.find_from_long_poll( :one, "http://localhost:8000", "/games/#{@game.id}?version=#{@game.lock_version + 1}" )
+    game = Clooneys::Game.find_from_long_poll( :one, "/games/#{@game.id}?version=#{@game.lock_version + 1}" )
     puts game.attributes.inspect
     @game = game if game
-    puts "Found game wait_for_update: #{game.inspect}"
+    #puts "Found game wait_for_update: #{game.inspect}"
 
     #c = Clooneys::Game.print_info( "http://localhost:8000" )
     #puts "#{c.name} #{c.site.inspect}"
@@ -25,8 +25,9 @@ class Clooneys::Intelligence
       puts "My dice: #{known_dice.join(",")}"
       if @game.can_bid?( @user )
         make_bid
-        sleep 2
-        @game = Clooneys::Game.find_from_site( :one, "http://localhost:3000", "/games/#{@game.id}" )
+        wait_for_update
+        #sleep 2
+        #@game = Clooneys::Game.find_from_short( :one, "/games/#{@game.id}" )
       end
       wait_for_update unless @game.can_bid?( @user ) || @game.complete?
     end

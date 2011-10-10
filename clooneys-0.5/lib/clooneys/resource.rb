@@ -6,31 +6,53 @@ class Clooneys::Resource < ActiveResource::Base
   LOGIN = "liar5"
   EMAIL_ADDRESS = 'liar5@toonsy.net'
   PASSWORD = 'pass5'
-  self.site = "http://localhost:3000"
+  @@short_host = "clooneys.net"
+  @@long_poll_host = "noodle.clooneys.net"
+  self.site = "http://#{@@short_host}"
   self.user = LOGIN
   self.password = PASSWORD
 
-  def self.find_from_site( type, site, path )
-    #uri = URI.parse( url )
-    #site = "#{uri.scheme}://#{uri.host}:#{uri.port}"
-    #path = uri.path
-    puts "site: #{site} path: #{path}"
-    #klass = class_for_site(site)
-    #object = klass.find(:one, :from => path)
-    original_site = self.site
-    self.site = site
-    object = self.find( :one, :from => path)
-    self.site = original_site
-    return object
-  end
+  class << self
+    def short_host= host
+      self.site = "http://#{host}"
+      @short_host = host
+    end
 
-  def self.find_from_long_poll( type, site, path)
-    while true
-      begin
-        puts "Polling"
-        result = find_from_site( type, site, path )
-        return result
-      rescue MultiJson::DecodeError
+    def short_host
+      @short_host
+    end
+
+    def long_poll_host= host
+      @@long_poll_host = host
+    end
+
+    def long_poll_host
+      @@long_poll_host
+    end
+
+    def find_from_site( type, site, path )
+      #uri = URI.parse( url )
+      #site = "#{uri.scheme}://#{uri.host}:#{uri.port}"
+      #path = uri.path
+      puts "site: #{site} path: #{path}"
+      #klass = class_for_site(site)
+      #object = klass.find(:one, :from => path)
+      original_site = self.site
+      self.site = site
+      object = self.find( :one, :from => path)
+      object.connection = nil
+      self.site = original_site
+      return object
+    end
+
+    def find_from_long_poll( type, path)
+      while true
+        begin
+          puts "Polling"
+          result = find_from_site( type, "http://#{long_poll_host}", path )
+          return result
+        rescue MultiJson::DecodeError
+        end
       end
     end
   end
