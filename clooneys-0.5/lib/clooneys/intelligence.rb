@@ -1,4 +1,5 @@
 class Clooneys::Intelligence
+  attr_accessor :game, :user
 
   def initialize( game, user)
     @game = game
@@ -8,23 +9,15 @@ class Clooneys::Intelligence
   end
 
   def wait_for_update
-    #url = @game.long_poll_url
-    #url = "/games/#{@game.id}"
     game = Clooneys::Game.find_from_long_poll( :one, "/games/#{@game.id}?version=#{@game.lock_version + 1}" )
-    puts game.attributes.inspect
+    #puts game.attributes.inspect
     @game = game if game
-    #puts "Found game wait_for_update: #{game.inspect}"
-
-    #c = Clooneys::Game.print_info( "http://localhost:8000" )
-    #puts "#{c.name} #{c.site.inspect}"
   end
 
   def start
     while !@game.complete?
-      known_dice = @game.dice_for_user( @user )
-      puts "My dice: #{known_dice.join(",")}"
-      if @game.can_bid?( @user )
-        make_bid
+      if self.game.can_bid?( @user )
+        make_next_bid
         wait_for_update
         #sleep 2
         #@game = Clooneys::Game.find_from_short( :one, "/games/#{@game.id}" )
@@ -33,55 +26,53 @@ class Clooneys::Intelligence
     end
   end
 
-  def make_bid
-    bullshit_odds = 0.0
-    if @game.bid
-      r = rand
-      bullshit_odds = @game.bid.odds( @user )
-      selected = r <= (1.0 - @game.bid.odds( @user ))**4
-      puts "#{@game.bid} bullshit odds: #{@game.bid.odds( @user )} - #{r} - #{selected}"
-      if selected
-        @game.make_bid_bullshit( @user )
-        return
-      end
-    end
-    bids = next_bids
-    bids.each do |bid|
-      puts "#{bid} odds: #{bid.odds( @user )}"
-    end
-    puts "Trying"
-    selected_bid = nil
-    bids.shuffle.each do |bid|
-      r = rand
-      selected = r <= (bid.odds( @user )**2)
-      puts "#{bid} odds: #{bid.odds( @user )} - #{r} - #{selected}"
-      if selected
-        selected_bid = bid
-        break
-      end
-    end
-    if !selected_bid && bullshit_odds > 0.99999
-      selected_bid = bids.sort{ |a,b| a.odds(@user) <=> b.odds(@user)}.last
-      puts "No bid found, choosing best one: #{selected_bid}"
-    end
-    if selected_bid
-      puts "BIDDING: #{selected_bid}"
-      @game.make_bid( @user, selected_bid.count, selected_bid.die)
-    else
-      puts "BULLSHIT"
-      @game.make_bid_bullshit( @user )
-    end
+  def make_next_bid
+    raise "not allowed to bid" unless self.game.can_bid?( self.user )
+    bid = next_bid
+    raise "no bid" unless bid
+    puts "BIDDING: #{bid}"
+    self.game.make_bid( self.user, bid)
   end
 
-  def next_bids
+  def next_bid
+    known_dice = self.game.dice_for_user( self.user )
+    puts "My dice: #{known_dice.join(",")}"
+    bids = []
+    if self.game.bid
+      bullshit_bid = self.game.bid.clone
+      bullshit_bid.bullshit = true
+      bullshit_odds = bullshit_bid.odds( self.user ) ** 3
+      bullshit_bid.odds = bullshit_odds
+      puts "#{bullshit_bid} bullshit odds: #{bullshit_odds}"
+      return bullshit_bid if bullshit_odds > 0.9944 ** 3
+      bids << bullshit_bid
+    end
+    bids += next_bids( 10 )
+    bids.each do |bid|
+      puts "#{bid} odds: #{bid.odds( self.user )}"
+    end
+    odds_sum = bids.inject(0) {|s,b| s + b.odds( self.user )}
+    puts "Odds sum: #{odds_sum}"
+    pick = odds_sum * rand
+    puts "Random pick index: #{pick}"
+    index = 0.0
+    bids.each do |bid|
+      index += bid.odds( self.user )
+      puts "#{bid} index: #{index}"
+      return bid if pick <= index
+    end
+    puts "WARNING: No bid found picked! Picking last one."
+    return bids.last
+  end
+
+  def next_bids( limit = nil )
     bid = @game.bid ? @game.bid.next : Clooneys::Bid.new( :count => 1, :die => 1)
     return [] unless bid
     bid.game = @game
     bids = [bid]
-    1.upto(12) do
-      bid = bids.last.next
-      break unless bid
+    while ( bid = bids.last.next )
       bids << bid
+      break if limit && bids.size >= limit
     end
     return bids
   end

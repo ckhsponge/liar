@@ -1,6 +1,6 @@
 require 'clooneys/resource'
 class Clooneys::Bid < Clooneys::Resource
-  attr_accessor :game
+  attr_accessor :game, :odds
   
   def collection_path(options = nil)
     raise "no game" unless @game
@@ -12,6 +12,12 @@ class Clooneys::Bid < Clooneys::Resource
     raise "no game" unless @game
     raise "no game id" unless @game.id
     "/games/#{@game.id}/#{self.class.collection_name}/#{self.id}.json"
+  end
+
+  def clone
+    c = super
+    c.game = @game
+    c
   end
   
   def next
@@ -25,8 +31,11 @@ class Clooneys::Bid < Clooneys::Resource
   end
 
   def odds( user )
+    @odds = nil unless @user == user
+    @user = user
     return @odds if @odds
-    @odds = @game.odds_for_user( self, user )
+    odds = @game.odds_for_user( self, user )
+    @odds = self.bullshit? ? 1 - odds : odds
     return @odds
   end
 

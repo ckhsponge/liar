@@ -63,10 +63,15 @@ class Clooneys::Game < Clooneys::Resource
     puts "Total for #{bid}: #{odds_for_user(bid, user)}"
   end
 
-  def make_bid( user, count, die)
+  def make_bid( user, bid)
     raise "no user" unless user
-    raise "no count" unless count
-    raise "no die" unless die
+    raise "no bid" unless bid
+    if bid.bullshit?
+      make_bid_bullshit( user )
+      return
+    end
+    raise "no count" unless (count = bid.count)
+    raise "no die" unless (die = bid.die)
     bid = Clooneys::Bid.new( :game_id => self.id, :count => count, :die => die)
     bid.game = self
     unless bid.save

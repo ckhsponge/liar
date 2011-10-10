@@ -9,10 +9,27 @@ class Fixnum
   def choose( k )
     self.factorial / ( k.factorial * (self - k).factorial )
   end
+
+  def clone
+    self
+  end
+end
+
+class TrueClass
+  def clone
+    self
+  end
+end
+
+class FalseClass
+  def clone
+    self
+  end
 end
 
 require 'clooneys'
-#Clooneys::Resource.long_poll_host = "localhost:8000"
+Clooneys::Resource.short_host = "localhost:3000"
+Clooneys::Resource.long_poll_host = "localhost:8000"
 class Console
   def start
     sign_in
