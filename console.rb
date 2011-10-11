@@ -49,20 +49,20 @@ class Console
         command = gets.chomp
         @command_ints = command.split(" ").collect{|i| i.to_i}[1,100]
         case command.split(" ").first
-          when "list_games"
+          when "list"
             list_games
-          when "list_active_games"
+          when "list_active"
             list_active_games
-          when "create_game"
+          when "create"
             create_game_command
-          when "destroy_game"
+          when "destroy"
             destroy_game_command
             list_games
-          when "start_game"
+          when "start"
             start_game_command
-          when "join_game"
+          when "join"
             join_game_command
-          when "play_game"
+          when "play"
             play_game_command
           when "r"
             ensure_game { @game.reload }
@@ -74,6 +74,8 @@ class Console
               #intelligence.wait_for_update
               intelligence.start
             }
+          when "t"
+            test_command
           when "odds"
             ensure_game { odds }
           when "bid"
@@ -107,6 +109,42 @@ class Console
       puts game.to_s
     end
     puts "-------------"
+  end
+
+  def test_command
+    ogame = nil
+    begin
+      @game = ogame = Clooneys::Game.new( :bid_time => 300 )
+      if @game.save
+        puts "Created game #{@game.name}"
+      else
+        puts @game.errors.to_a.join ','
+        @game = nil
+        raise Clooneys::Exception.new("Could not create game")
+      end
+      test_change_name @game
+      @game = @game.next_version( :version => 0 )
+      test_change_name @game
+    rescue Clooneys::Exception => cexc
+      puts cexc.to_s
+    end
+    ogame.destroy
+  end
+
+  def test_change_name( game )
+    name = "name #{Time.now} #{Time.now.usec}"
+    puts "Trying to change name to '#{name}'"
+    game.name = name
+    if game.save
+      puts "Updated game #{game.name}"
+    else
+      puts game.errors.to_a.join ','
+      game = nil
+      raise Clooneys::Exception.new("Could not update game")
+    end
+    game = Clooneys::Game.find(game.id)
+    raise Clooneys::Exception.new("Game not found") unless game
+    raise Clooneys::Exception.new("Wrong name '#{game.name}' expected '#{name}'") unless game.name == name
   end
 
   def create_game_command

@@ -9,9 +9,7 @@ class Clooneys::Intelligence
   end
 
   def wait_for_update
-    game = Clooneys::Game.find_from_long_poll( :one, "/games/#{@game.id}?version=#{@game.lock_version + 1}" )
-    #puts game.attributes.inspect
-    @game = game if game
+    @game = @game.next_version
   end
 
   def start

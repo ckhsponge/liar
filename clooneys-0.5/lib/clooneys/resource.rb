@@ -39,7 +39,7 @@ class Clooneys::Resource < ActiveResource::Base
       #object = klass.find(:one, :from => path)
       original_site = self.site
       self.site = site
-      object = self.find( :one, :from => path)
+      object = self.find( type, :from => path)
       object.connection = nil
       self.site = original_site
       return object
@@ -55,6 +55,13 @@ class Clooneys::Resource < ActiveResource::Base
         end
       end
     end
+  end
+
+  def next_version( options = {} )
+    version = options[:version] ? options[:version].to_i : nil
+    version ||= self.lock_version.to_i + 1 if self.respond_to? :lock_version
+    suffix = version ? "?version=#{version}" : ""
+    return self.class.find_from_long_poll( :one, "#{element_path.sub(/\..*$/,'')}#{suffix}")
   end
 
   #def self.class_for_site( site )
