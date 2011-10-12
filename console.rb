@@ -68,6 +68,9 @@ class Console
             ensure_game { @game.reload }
           when "a"
             ensure_game { auto_play_command }
+          when "s"
+            intelligence_player = Clooneys::IntelligencePlayer.new( Clooneys::Intelligence, @user )
+            intelligence_player.start
           when "w"
             ensure_game {
               intelligence = Clooneys::Intelligence.new( @game, @user )

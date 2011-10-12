@@ -45,7 +45,8 @@ class Clooneys::Resource < ActiveResource::Base
       return object
     end
 
-    def find_from_long_poll( type, path)
+    def find_from_long_poll( type, path, options = {} )
+      start_time = Time.now
       while true
         begin
           puts "Polling"
@@ -53,6 +54,7 @@ class Clooneys::Resource < ActiveResource::Base
           return result
         rescue MultiJson::DecodeError
         end
+        return nil if options[:wait] && Time.now - start_time > options[:wait]
       end
     end
   end
@@ -61,7 +63,7 @@ class Clooneys::Resource < ActiveResource::Base
     version = options[:version] ? options[:version].to_i : nil
     version ||= self.lock_version.to_i + 1 if self.respond_to? :lock_version
     suffix = version ? "?version=#{version}" : ""
-    return self.class.find_from_long_poll( :one, "#{element_path.sub(/\..*$/,'')}#{suffix}")
+    return self.class.find_from_long_poll( :one, "#{element_path.sub(/\..*$/,'')}#{suffix}", options)
   end
 
   #def self.class_for_site( site )

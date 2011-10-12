@@ -19,6 +19,10 @@ class Clooneys::Game < Clooneys::Resource
   def complete?
     return !!self.winner_id
   end
+  
+  def started?
+    return !!self.next_bidder_id
+  end
 
   def join(user)
     player = Clooneys::Player.new
