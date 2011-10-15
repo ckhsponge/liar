@@ -4,8 +4,16 @@ class Clooneys::Game < Clooneys::Resource
   BID_TIME_OPTIONS_HASH = {15.seconds.to_i => "15 Seconds", 1.minutes.to_i => "1 Minute", 5.minutes.to_i => "5 Minutes", 1.hours.to_i => "1 Hours", 4.hours.to_i => "4 Hours" , 1.days.to_i => "1 Day" }
   BID_TIME_OPTIONS = BID_TIME_OPTIONS_HASH.to_a.collect{ |a| a.reverse }
 
-  def self.all( filter = "future" )
-    games = self.find(:all, :params => {:filter => filter} )
+  FUTURE = "future"
+  PRESENT = "present"
+  PAST = "past"
+
+  def self.all( filter = FUTURE, options = {} )
+    params = {:filter => filter}
+    params[:user_id] = options[:user].id if options[:user]
+    params[:creator_id] = options[:creator].id if options[:creator]
+    self.site = Clooneys::Resource.short_site
+    games = self.find(:all, :params => params )
     games.each do |game|
       game.players.each {|p| p.game = game}
     end
@@ -27,10 +35,9 @@ class Clooneys::Game < Clooneys::Resource
   def join(user)
     player = Clooneys::Player.new
     player.game = self
-    puts "joining: #{self.id}"
     if player.save
     else
-      puts player.errors.inspect
+      puts player.errors.to_a.join(",")
     end
     return player
   end

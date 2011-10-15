@@ -14,12 +14,16 @@ class Clooneys::Resource < ActiveResource::Base
 
   class << self
     def short_host= host
-      self.site = "http://#{host}"
       @short_host = host
+      self.site = short_site
     end
 
     def short_host
       @short_host
+    end
+
+    def short_site
+      "http://#{@short_host}"
     end
 
     def long_poll_host= host
@@ -34,14 +38,19 @@ class Clooneys::Resource < ActiveResource::Base
       #uri = URI.parse( url )
       #site = "#{uri.scheme}://#{uri.host}:#{uri.port}"
       #path = uri.path
-      puts "site: #{site} path: #{path}"
+      puts "setting site: #{site} path: #{path}"
       #klass = class_for_site(site)
       #object = klass.find(:one, :from => path)
       original_site = self.site
       self.site = site
-      object = self.find( type, :from => path)
-      object.connection = nil
-      self.site = original_site
+      object = nil
+      begin
+        object = self.find( type, :from => path)
+      ensure
+        object.connection = nil if object
+        puts "resetting site to: #{original_site}"
+        self.site = original_site
+      end
       return object
     end
 
