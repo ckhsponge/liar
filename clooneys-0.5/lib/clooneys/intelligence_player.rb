@@ -43,7 +43,7 @@ class Clooneys::IntelligencePlayer
       if join_other_game
         puts "Looking for other game to join"
         other_game = find_other_game( Clooneys::Game::FUTURE )
-        unless other_game.player_for_user( @user )
+        if other_game && !other_game.player_for_user( @user )
           #other_game = Clooneys::Game.all.first
           puts "Found this game to join: #{other_game.id}"
           player = other_game.join( @user )

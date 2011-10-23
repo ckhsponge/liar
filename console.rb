@@ -28,8 +28,8 @@ class FalseClass
 end
 
 require 'clooneys'
-Clooneys::Resource.short_host = "localhost:3000"
-Clooneys::Resource.long_poll_host = "localhost:8000"
+Clooneys::Resource.site = "http://localhost:3000"
+ENV['LONG_POLLL_HOST'] = "localhost:8000"
 class Console
   def start
     sign_in
