@@ -10,65 +10,80 @@ class Clooneys::IntelligencePlayer
   def start
     while true
 
-      find_my_game( Clooneys::Game::PRESENT, :user => @user ) do |game|
-        play_game( game )
-      end
+      played_present_game = play_present_game
+      next if played_present_game
 
-      my_future_game = nil
-      join_other_game = true
-      my_future_game ||= find_my_game( Clooneys::Game::FUTURE, :creator => @user )
-      #unless( my_future_game )
-      #  puts "Creating a game"
-      #  my_future_game = Clooneys::Game.new( :bid_time => 60 )
-      #  my_future_game.save!
-      #end
-      #if my_future_game.started?
-      #  puts "Playing started future game"
-      #  play_game( my_future_game )
-      #else
-      #  puts "Waiting for players to join"
-      #  next_game = my_future_game.next_version( :wait => 25 )
-      #  puts "next_game #{!!next_game} #{ my_future_game.players.size} #{my_future_game.min_players}"
-      #  if next_game
-      #    my_future_game = next_game
-      #  end
-      #  if my_future_game.players.size >= my_future_game.min_players
-      #    puts "Trying to start game"
-      #    my_future_game.start = true
-      #    my_future_game.save!
-      #    play_game( my_future_game )
-      #    join_other_game = false
-      #  end
-      #end
-      if join_other_game
-        puts "Looking for other game to join"
-        other_game = find_other_game( Clooneys::Game::FUTURE )
-        if other_game && !other_game.player_for_user( @user )
-          #other_game = Clooneys::Game.all.first
-          puts "Found this game to join: #{other_game.id}"
-          player = other_game.join( @user )
-          if player.errors.size > 0
-            puts "Could not join game"
-            puts player.errors.to_a.join ','
-            other_game = nil
-          else
-            puts "Joined game"
-          end
-        end
-        if other_game
-          puts "Waiting for joined game to start: #{other_game.id}"
-          next_game = other_game.next_version( :wait => 25 )
-          if next_game && next_game.started?
-            play_game( next_game )
-          else
-            puts "Unjoining game"
-            begin
-              other_game.unjoin( @user )
-            rescue Exception => exc #TODO: use more specific exception
-              puts "Could not unjoin game: #{exc.to_s}"
-              puts other_game.errors.to_a.join ','
-            end
-          end
+      played_created_game = play_created_game
+      next if played_created_game
+      
+      play_other_game
+    end
+  end
+
+  def play_present_game
+    find_my_game( Clooneys::Game::PRESENT, :user => @user ) do |game|
+      play_game( game )
+      return true
+    end
+    return false
+  end
+
+  def play_created_game
+    my_future_game = find_my_game( Clooneys::Game::FUTURE, :creator => @user )
+    unless( my_future_game )
+      puts "Creating a game"
+      my_future_game = Clooneys::Game.new( :bid_time => 60 )
+      my_future_game.save!
+    end
+    if my_future_game.started?
+      puts "Playing started future game"
+      play_game( my_future_game )
+      return true
+    else
+      puts "Waiting for players to join"
+      next_game = my_future_game.next_version( :wait => 25 )
+      puts "next_game #{!!next_game} #{ my_future_game.players.size} #{my_future_game.min_players}"
+      if next_game
+        my_future_game = next_game
+      end
+      if my_future_game.players.size >= my_future_game.min_players
+        puts "Trying to start game"
+        my_future_game.start = true
+        my_future_game.save!
+        play_game( my_future_game )
+        return true
+      end
+    end
+    return false
+  end
+
+  def play_other_game
+    puts "Looking for other game to join"
+    other_game = find_other_game( Clooneys::Game::FUTURE )
+    if other_game && !other_game.player_for_user( @user )
+      #other_game = Clooneys::Game.all.first
+      puts "Found this game to join: #{other_game.id}"
+      player = other_game.join( @user )
+      if player.errors.size > 0
+        puts "Could not join game"
+        puts player.errors.to_a.join ','
+        other_game = nil
+      else
+        puts "Joined game"
+      end
+    end
+    if other_game
+      puts "Waiting for joined game to start: #{other_game.id}"
+      next_game = other_game.next_version( :wait => 25 )
+      if next_game && next_game.started?
+        play_game( next_game )
+      else
+        puts "Unjoining game"
+        begin
+          other_game.unjoin( @user )
+        rescue Exception => exc #TODO: use more specific exception
+          puts "Could not unjoin game: #{exc.to_s}"
+          puts other_game.errors.to_a.join ','
         end
       end
     end

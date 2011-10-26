@@ -17,7 +17,7 @@ class Clooneys::Intelligence
       if self.game.can_bid?( @user )
         make_next_bid
         wait_for_update
-        #sleep 2
+        sleep 1
         #@game = Clooneys::Game.find_from_short( :one, "/games/#{@game.id}" )
       end
       wait_for_update unless @game.can_bid?( @user ) || @game.complete?

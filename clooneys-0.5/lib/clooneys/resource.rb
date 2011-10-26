@@ -58,31 +58,28 @@ class Clooneys::Resource < ActiveResource::Base
       start_time = Time.now
       while true
         begin
-          puts "Polling"
-          #result = find_from_site( type, "http://#{long_poll_host}", path )
-          params = {}
-          #params[:site] = options[:site] if options[:site]
-          result = find( type, :from => path, :site => options[:site] )
+          puts "Polling (#{Time.now - start_time})"
+          result = find( type, options.merge(:from => path) )
           return result
         rescue MultiJson::DecodeError
         end
-        return nil if options[:wait] && Time.now - start_time > options[:wait]
+        if options[:wait] && Time.now - start_time > options[:wait]
+          puts "wait exceeded, ending poll"
+          return nil
+        end
       end
     end
   end
 
   def next_version( options = {} )
     version = options[:version] ? options[:version].to_i : nil
-    version ||= self.lock_version.to_i + 1 if self.respond_to? :lock_version
+    version ||= self.lock_version.to_i + 1 if self.known_attributes.include?( "lock_version" )
+    puts "NEXT VERSION: #{version}"
     suffix = version ? "?version=#{version}" : ""
     #return self.class.find_from_long_poll( :one, "#{element_path.sub(/\..*$/,'')}#{suffix}", options)
     raise "long_poll_url not defined" unless self.respond_to? :long_poll_url
-    uri = URI.parse( self.long_poll_url )
-    site = "#{uri.scheme}://#{uri.host}"
-    site += ":#{uri.port}" if uri.port
-    puts "SITE: #{site}"
-    #return self.class.find_from_long_poll( :one, uri.path, :site => uri )
-    return self.class.find_from_long_poll( :one, self.long_poll_url, options )
+
+    return self.class.find_from_long_poll( :one, self.long_poll_url, options.merge(:params => {:version => version}) )
   end
 
   #def self.class_for_site( site )
@@ -111,11 +108,11 @@ module ActiveResource
     private
       # Makes a request to the remote service.
       def request(method, path, *arguments)
-        puts "REQUEST #{path}"
+        puts "REQUEST #{path} #{arguments.inspect}"
         uri = URI.parse( path )
         request_http = http
         if uri.host
-          path = uri.path
+          path = uri.request_uri #includes params unlike path()
           request_http = Net::HTTP.new(uri.host, uri.port) #ignores @timeout and @proxy
         else
           uri = site

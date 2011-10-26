@@ -14,10 +14,10 @@ class Clooneys::Game < Clooneys::Resource
     params = {:filter => filter}
     params[:user_id] = options[:user].id if options[:user]
     params[:creator_id] = options[:creator].id if options[:creator]
-    #self.site = Clooneys::Resource.short_site
     games = []
     begin
-      games = self.find(:all, :from => "http://#{LONG_POLL_HOST}/games.json", :params => params )
+      #games = self.find(:all, :from => "http://#{LONG_POLL_HOST}/games.json", :params => params )
+      games = self.find(:all, :params => params )
       games.each do |game|
         game.players.each {|p| p.game = game}
       end
