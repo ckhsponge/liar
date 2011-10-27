@@ -13,7 +13,7 @@ class Clooneys::Intelligence
   end
 
   def start
-    while !@game.complete?
+    while !@game.complete? && @game.dice_count_for_user( @user ) > 0
       if self.game.can_bid?( @user )
         make_next_bid
         wait_for_update
@@ -22,6 +22,7 @@ class Clooneys::Intelligence
       end
       wait_for_update unless @game.can_bid?( @user ) || @game.complete?
     end
+    puts "No dice left" if @game.dice_count_for_user( @user ) == 0
   end
 
   def make_next_bid
@@ -45,7 +46,7 @@ class Clooneys::Intelligence
       return bullshit_bid if bullshit_odds > 0.9944 ** 3
       bids << bullshit_bid
     end
-    bids += next_bids( 10 )
+    bids += next_bids( 6 )
     bids.each do |bid|
       puts "#{bid} odds: #{bid.odds( self.user )}"
     end

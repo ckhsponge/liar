@@ -22,8 +22,10 @@ class Clooneys::IntelligencePlayer
 
   def play_present_game
     find_my_game( Clooneys::Game::PRESENT, :user => @user ) do |game|
-      play_game( game )
-      return true
+      if game.dice_count_for_user( @user ) > 0
+        play_game( game )
+        return true
+      end
     end
     return false
   end

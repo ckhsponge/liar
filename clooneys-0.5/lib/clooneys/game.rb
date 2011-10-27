@@ -161,6 +161,10 @@ class Clooneys::Game < Clooneys::Resource
     return []
   end
 
+  def dice_count_for_user( user )
+    dice_for_user( user ).size
+  end
+
   def rolls_cache( round_number )
     @rolls_cache ||= {}
     @rolls_cache[ round_number.to_s ] ||= Clooneys::Roll.find_rolls( self, round_number )
