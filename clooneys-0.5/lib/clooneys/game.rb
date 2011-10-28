@@ -8,8 +8,6 @@ class Clooneys::Game < Clooneys::Resource
   PRESENT = "present"
   PAST = "past"
 
-  LONG_POLL_HOST = "localhost:8000"
-
   def self.all( filter = FUTURE, options = {} )
     params = {:filter => filter}
     params[:user_id] = options[:user].id if options[:user]

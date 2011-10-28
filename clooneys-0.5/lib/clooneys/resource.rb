@@ -3,14 +3,8 @@ require 'rubygems'
 require 'active_resource'
 require 'uri'
 class Clooneys::Resource < ActiveResource::Base
-  LOGIN = "liar5"
-  EMAIL_ADDRESS = 'liar5@toonsy.net'
-  PASSWORD = 'pass5'
-  #@@short_host = "clooneys.net"
-  #@@long_poll_host = "noodle.clooneys.net"
-  #self.site = "http://#{@@short_host}"
-  self.user = LOGIN
-  self.password = PASSWORD
+  self.site = "http://clooneys.net"
+  @@long_poll_host = "http://noodle.clooneys.net"
 
   class << self
     #def short_host= host
@@ -26,13 +20,13 @@ class Clooneys::Resource < ActiveResource::Base
     #  "http://#{@short_host}"
     #end
     #
-    #def long_poll_host= host
-    #  @@long_poll_host = host
-    #end
-    #
-    #def long_poll_host
-    #  @@long_poll_host
-    #end
+    def long_poll_host= host
+      @@long_poll_host = host
+    end
+
+    def long_poll_host
+      @@long_poll_host
+    end
     #
     #def find_from_site( type, site, path )
     #  #uri = URI.parse( url )

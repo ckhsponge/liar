@@ -1,3 +1,3 @@
-
-host: localhost:3000
-long_poll_host: localhost:8000
+development:
+  host: localhost:3000
+  long_poll_host: localhost:8000

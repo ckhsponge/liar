@@ -2,6 +2,7 @@ module Clooneys
 
 end
 
+require 'clooneys/lib'
 require 'clooneys/bid'
 require 'clooneys/exception'
 require 'clooneys/game'
@@ -12,3 +13,4 @@ require 'clooneys/roll'
 require 'clooneys/user'
 require 'clooneys/intelligence'
 require 'clooneys/intelligence_player'
+require 'clooneys/console'
