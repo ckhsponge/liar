@@ -134,7 +134,7 @@ class Clooneys::Console
   end
 
   def destroy_game_command
-    ensure_game do
+    find_game do
       @game.destroy
       puts "Destroyed game"
       @game = nil

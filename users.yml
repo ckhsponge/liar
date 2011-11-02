@@ -2,3 +2,8 @@ liar5:
   login: liar5
   email_address: liar5@toonsy.net
   password: pass5
+liar6:
+  login: liar6
+  email_address: liar6@toonsy.net
+  password: pass6
+

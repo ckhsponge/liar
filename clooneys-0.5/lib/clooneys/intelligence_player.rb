@@ -36,6 +36,8 @@ class Clooneys::IntelligencePlayer
       puts "Creating a game"
       my_future_game = Clooneys::Game.new( :bid_time => 60 )
       my_future_game.save!
+      puts "my_future_game #{my_future_game.inspect}"
+      my_future_game = Clooneys::Game.find( my_future_game.id ) unless my_future_game.respond_to? :next_bidder_id #incomplete response from heroku so reload
     end
     if my_future_game.started?
       puts "Playing started future game"

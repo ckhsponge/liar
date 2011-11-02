@@ -65,6 +65,13 @@ class Clooneys::Resource < ActiveResource::Base
     end
   end
 
+  #gets the most recent version from the long poll server
+  def reload_from_long_poll( options = {} )
+    raise "long_poll_url not defined" unless self.respond_to? :long_poll_url
+    return self.class.find_from_long_poll( :one, self.long_poll_url, options.merge(:params => {:version => 0}) )
+  end
+
+  #waits for the next version from the long poll server
   def next_version( options = {} )
     version = options[:version] ? options[:version].to_i : nil
     version ||= self.lock_version.to_i + 1 if self.known_attributes.include?( "lock_version" )

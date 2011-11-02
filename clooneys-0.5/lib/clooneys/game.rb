@@ -185,6 +185,7 @@ class Clooneys::Game < Clooneys::Resource
   end
 
   def to_s
+    return super unless self.respond_to? :name
     "#{self.id} - #{self.name} (#{self.format_bid_time}) [#{self.players.collect {|p| p.login}.join(',')}]"
   end
 
