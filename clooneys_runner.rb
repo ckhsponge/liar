@@ -3,8 +3,9 @@ class ClooneysRunner
   def self.user
     users = YAML.load( File.read('users.yml') )
     puts users.inspect
-    user_params = users[ARGV[0]]
-    user_params.each_key {|k| user_params[k.to_s.intern] = user_params[k]} #symbolize hash
+    user_params_string = users[ARGV[0]]
+    user_params = {}
+    user_params_string.each_key {|k| user_params[k.to_s.intern] = user_params_string[k]} #symbolize hash
     raise "No user '#{ARGV[0]}'" unless user_params
     puts user_params.inspect
     user = Clooneys::User.sign_in( user_params )
