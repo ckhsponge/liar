@@ -13,10 +13,12 @@ class Clooneys::IntelligencePlayer
       played_present_game = play_present_game
       next if played_present_game
 
-      played_created_game = play_created_game
-      next if played_created_game
+      unless @user.skip_create
+        played_created_game = play_created_game
+        next if played_created_game
+      end
       
-      play_other_game
+      play_other_game unless @user.skip_join
     end
   end
 

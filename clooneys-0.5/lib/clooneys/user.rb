@@ -1,5 +1,8 @@
 require 'clooneys/resource'
 class Clooneys::User < Clooneys::Resource
+  attr_accessor :skip_create
+  attr_accessor :skip_join
+  
   def self.me
     raise "login not set" unless self.user
     Clooneys::User.find(:first, :login =>  self.user)
