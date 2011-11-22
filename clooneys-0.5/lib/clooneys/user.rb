@@ -2,6 +2,7 @@ require 'clooneys/resource'
 class Clooneys::User < Clooneys::Resource
   attr_accessor :skip_create
   attr_accessor :skip_join
+  attr_accessor :no_play_logins
   
   def self.me
     raise "login not set" unless self.user
@@ -27,7 +28,7 @@ class Clooneys::User < Clooneys::Resource
         raise Clooneys::Exception.new("Failed to create a new user, maybe you forgot your password: #{user.errors.inspect}")
       end
     end
-    puts "Signed in #{user.login}"
+    puts "Signed in #{user.login} #{user.id}"
     return user
   end
 end

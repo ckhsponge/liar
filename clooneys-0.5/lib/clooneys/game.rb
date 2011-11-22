@@ -29,6 +29,14 @@ class Clooneys::Game < Clooneys::Resource
     self.next_bidder_id && user && next_bidder_id == user.id
   end
 
+  def has_login?( logins )
+    return false unless logins
+    return false if self.players.empty?
+    logins = [logins] unless logins.is_a?( Array )
+    self.players.each {|p| return true if logins.include?(p.login)}
+    return false
+  end
+
   def complete?
     return !!self.winner_id
   end
@@ -174,6 +182,7 @@ class Clooneys::Game < Clooneys::Resource
     user_id = user.kind_of?(Fixnum) ? user : user.id
     return nil unless user
     self.players.each do |p|
+      puts "COMPARE #{ p.user_id} #{user_id } == #{ p.user_id == user_id}"
       return p if p.user_id == user_id
     end
     return nil
