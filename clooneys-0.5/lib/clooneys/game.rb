@@ -8,6 +8,7 @@ class Clooneys::Game < Clooneys::Resource
   PRESENT = "present"
   PAST = "past"
 
+  #sets player.game = self for all players
   def self.all( filter = FUTURE, options = {} )
     params = {:filter => filter}
     params[:user_id] = options[:user].id if options[:user]
@@ -23,6 +24,12 @@ class Clooneys::Game < Clooneys::Resource
       puts "/games MultiJson::DecodeError"
     end
     return games
+  end
+
+  #sets player.game = self for all players
+  def reload
+    super()
+    self.players.each {|p| p.game = self}
   end
 
   def can_bid?( user )
@@ -182,7 +189,6 @@ class Clooneys::Game < Clooneys::Resource
     user_id = user.kind_of?(Fixnum) ? user : user.id
     return nil unless user
     self.players.each do |p|
-      puts "COMPARE #{ p.user_id} #{user_id } == #{ p.user_id == user_id}"
       return p if p.user_id == user_id
     end
     return nil

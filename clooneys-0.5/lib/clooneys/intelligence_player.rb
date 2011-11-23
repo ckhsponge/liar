@@ -69,18 +69,20 @@ class Clooneys::IntelligencePlayer
     #don't consider games @user created nor games with people the @user doesn't want to play
     other_games.delete_if { |g| g.creator_id == @user.id || g.has_login?( @user.no_play_logins )}
     puts "remaining other games: #{other_games}"
-    other_game = other_games.sample
+    other_game = nil
+    other_games.each {|g| other_game = g if g.player_for_user( @user )} #use the game that's already joined'
+    other_game ||= other_games.sample #otherwise pick a random game
     #join the game if not already joined
     if other_game && !other_game.player_for_user( @user )
       #other_game = Clooneys::Game.all.first
       puts "Found this game to join: #{other_game.id} #{other_game.players.inspect}"
       player = other_game.join( @user )
       if player.errors.size > 0
-        puts "Could not join game"
-        puts player.errors.to_a.join ','
+        puts "Could not join game #{player.errors.to_a.join ','}"
         other_game = nil
       else
-        puts "Joined game"
+        other_game.reload
+        puts "Joined game #{other_game}"
       end
     end
     #wait for the creator of this game to start it
@@ -90,12 +92,11 @@ class Clooneys::IntelligencePlayer
       if next_game && next_game.started?
         play_game( next_game )
       else
-        puts "Unjoining game"
+        puts "Unjoining game #{other_game}"
         begin
           other_game.unjoin( @user )
         rescue Exception => exc #TODO: use more specific exception
-          puts "Could not unjoin game: #{exc.to_s}"
-          puts other_game.errors.to_a.join ','
+          puts "Could not unjoin game: #{other_game.errors.to_a.join ','} EXC: #{exc.to_s}"
         end
       end
     else
