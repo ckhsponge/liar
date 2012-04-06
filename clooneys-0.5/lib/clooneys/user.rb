@@ -23,12 +23,12 @@ class Clooneys::User < Clooneys::Resource
       puts "user not found"
       user = Clooneys::User.new_me( options[:email_address] )
       if user.save
-        puts "Created a new user: #{user.login}"
+        puts "Created a new user: #{user.name}"
       else
         raise Clooneys::Exception.new("Failed to create a new user, maybe you forgot your password: #{user.errors.inspect}")
       end
     end
-    puts "Signed in #{user.login} #{user.id}"
+    puts "Signed in #{user.name} #{user.id}"
     return user
   end
 end
