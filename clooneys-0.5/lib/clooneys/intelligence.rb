@@ -9,7 +9,12 @@ class Clooneys::Intelligence
   end
 
   def wait_for_update
-    @game = @game.next_version
+    next_game = @game.next_version( :wait => @game.bid_seconds_remaining ? @game.bid_seconds_remaining + 1 : nil)
+    if next_game
+      @game = next_game
+    else
+      @game.reload
+    end
   end
 
   def start

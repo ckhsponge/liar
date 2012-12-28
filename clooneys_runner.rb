@@ -1,4 +1,4 @@
-
+#this is executed from ai.rb
 class ClooneysRunner
   def self.user
     configs = YAML.load( File.read('config.yml') )
@@ -13,6 +13,7 @@ class ClooneysRunner
     users = YAML.load( File.read('users.yml') )
     puts users.inspect
     user_params_string = users[ARGV[0]]
+    raise "no user params found for '#{ARGV[0]}'" unless user_params_string
     user_params = {}
     user_params_string.each_key {|k| user_params[k.to_s.intern] = user_params_string[k]} #symbolize hash
     raise "No user '#{ARGV[0]}'" unless user_params

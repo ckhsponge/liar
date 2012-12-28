@@ -1,4 +1,7 @@
 #!/usr/bin/ruby
+#
+#bundle exec ruby ai.rb liar5 development
+#
 $:.unshift File.dirname(__FILE__)
 require "rubygems"
 require "bundler/setup"

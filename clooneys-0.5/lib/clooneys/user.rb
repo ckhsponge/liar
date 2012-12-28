@@ -21,6 +21,7 @@ class Clooneys::User < Clooneys::Resource
     Clooneys::Resource.password = options[:password]
     unless ( user = Clooneys::User.me )
       puts "user not found"
+      raise "creating users disabled"
       user = Clooneys::User.new_me( options[:email_address] )
       if user.save
         puts "Created a new user: #{user.name}"
