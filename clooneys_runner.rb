@@ -20,9 +20,6 @@ class ClooneysRunner
     puts user_params.inspect
     user = Clooneys::User.sign_in( user_params )
     raise "Could not sign in" unless user
-    user.skip_join = user_params[ :skip_join ]
-    user.skip_create = user_params[ :skip_create ]
-    user.no_play_logins = user_params[ :no_play_logins ]
 
     return user
   end

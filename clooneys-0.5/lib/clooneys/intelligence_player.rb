@@ -47,17 +47,25 @@ class Clooneys::IntelligencePlayer
       return true
     else
       puts "Waiting for players to join"
-      next_game = my_future_game.next_version( :wait => 25 )
+      if my_future_game.players.size < my_future_game.min_players
+        next_game = my_future_game.next_version( :wait => 25 )
+      end
       puts "next_game #{!!next_game} #{ my_future_game.players.size} #{my_future_game.min_players}"
       if next_game
+        puts "next_game reloaded #{ next_game.players.size} #{next_game.min_players} #{next_game.to_json}"
         my_future_game = next_game
       end
       if my_future_game.players.size >= my_future_game.min_players
-        puts "Trying to start game"
-        my_future_game.start = true
-        my_future_game.save!
-        play_game( my_future_game )
-        return true
+        puts "start delay - sleep( #{@user.start_delay} )"
+        sleep( @user.start_delay )
+        next_game = my_future_game.reload_from_long_poll
+        if next_game && next_game.players.size >= next_game.min_players
+          puts "Trying to start game"
+          next_game.start = true
+          next_game.save!
+          play_game( next_game )
+          return true
+        end
       end
     end
     return false

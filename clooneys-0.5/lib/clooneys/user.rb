@@ -3,6 +3,7 @@ class Clooneys::User < Clooneys::Resource
   attr_accessor :skip_create
   attr_accessor :skip_join
   attr_accessor :no_play_logins
+  attr_accessor :start_delay
   
   def self.me
     raise "login not set" unless self.user
@@ -30,6 +31,12 @@ class Clooneys::User < Clooneys::Resource
       end
     end
     puts "Signed in #{user.name} #{user.id}"
+
+    user.skip_join = options[ :skip_join ]
+    user.skip_create = options[ :skip_create ]
+    user.no_play_logins = options[ :no_play_logins ]
+    user.start_delay = options[ :start_delay ] || 15.seconds
+
     return user
   end
 end
