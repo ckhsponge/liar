@@ -12,12 +12,15 @@ class ClooneysRunner
 
     users = YAML.load( File.read('users.yml') )
     puts users.inspect
-    user_params_string = users[ARGV[0]]
-    raise "no user params found for '#{ARGV[0]}'" unless user_params_string
+    login = ARGV[0]
+    logins = users.values.collect{|v| v['login']}
+    puts "logins: #{logins}"
+    user_params_string = users[login]
+    raise "no user params found for '#{login}'" unless user_params_string
     user_params = {}
     user_params_string.each_key {|k| user_params[k.to_s.intern] = user_params_string[k]} #symbolize hash
-    raise "No user '#{ARGV[0]}'" unless user_params
-    puts user_params.inspect
+    user_params[:no_play_logins] = logins.delete_if{|l| l==user_params[:login]}
+    puts "Playing: #{user_params.inspect}"
     user = Clooneys::User.sign_in( user_params )
     raise "Could not sign in" unless user
 
