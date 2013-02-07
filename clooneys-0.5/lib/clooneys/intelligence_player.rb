@@ -10,14 +10,26 @@ class Clooneys::IntelligencePlayer
   def start
     while true
 
+      puts "played_present_game"
       played_present_game = play_present_game
-      next if played_present_game
+      if played_present_game
+        puts "play_again played_present_game"
+        played_present_game.play_again rescue ActiveResource::ResourceInvalid if @user.play_again?
+        next
+      end
 
       unless @user.skip_create
-        played_created_game = play_created_game
-        next if played_created_game
+        puts "play_created_game"
+        played_game = play_created_game
+        puts "played created: #{played_game}"
+        if played_game
+          puts "play_again play_created_game"
+          played_game.play_again rescue ActiveResource::ResourceInvalid if @user.play_again?
+          next
+        end
       end
-      
+
+      puts "play_other_game"
       play_other_game unless @user.skip_join
     end
   end
@@ -26,10 +38,10 @@ class Clooneys::IntelligencePlayer
     find_my_game( Clooneys::Game::PRESENT, :user => @user ) do |game|
       if game.dice_count_for_user( @user ) > 0
         play_game( game )
-        return true
+        return game
       end
     end
-    return false
+    return nil
   end
 
   def play_created_game
@@ -44,7 +56,7 @@ class Clooneys::IntelligencePlayer
     if my_future_game.started?
       puts "Playing started future game"
       play_game( my_future_game )
-      return true
+      return my_future_game
     else
       puts "Waiting for players to join"
       if my_future_game.players.size < my_future_game.min_players
@@ -63,12 +75,13 @@ class Clooneys::IntelligencePlayer
           puts "Trying to start game"
           next_game.start = true
           next_game.save!
+          next_game.reload #reload so dice get set
           play_game( next_game )
-          return true
+          return next_game
         end
       end
     end
-    return false
+    return nil
   end
 
   def play_other_game

@@ -67,6 +67,10 @@ class Clooneys::Game < Clooneys::Resource
     player.destroy
   end
 
+  def play_again
+    self.get( :play_again )
+  end
+
   def print_status( user )
     puts self.name
     puts "Player - Dice Left"

@@ -4,6 +4,10 @@ class Clooneys::User < Clooneys::Resource
   attr_accessor :skip_join
   attr_accessor :no_play_logins
   attr_accessor :start_delay
+
+  def play_again?
+    !self.skip_create && self.skip_join
+  end
   
   def self.me
     raise "login not set" unless self.user
