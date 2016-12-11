@@ -3,7 +3,7 @@ require 'rubygems'
 require 'active_resource'
 require 'uri'
 class Clooneys::Resource < ActiveResource::Base
-  self.site = "http://clooneys.net"
+  self.site = "http://www.clooneys.net"
   @@long_poll_host = "http://noodle.clooneys.net"
 
   class << self
